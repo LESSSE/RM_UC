@@ -6,17 +6,17 @@ seed_1 = 1325
 seed_2 = 31235
 data_file = "data.in"
 
-sizes = np.arange(10, 101, 10)
-percentages = np.linspace(0, 1, 11)
-cutoff_time = 2 #seconds
+sizes = np.arange(5, 15)
+percentages = np.linspace(0, 1, 101)
+cutoff_time = 300 #seconds
 
 file1 = "code1_results.txt"
 file2 = "code2_results.txt"
 
 os.system(f'rm -f code1_results.txt code2_results.txt')
 
-for p in percentages:
-    for s in sizes:
+for s in sizes:
+    for p in percentages:
         os.system(f'python3 gen.py {s} {p} {seed_1} {data_file}')
         os.system(f'echo "______\\nExams: {s} | Percentage: {p}" | tee -a {file1} {file2}')
         os.system(f'./code1 {seed_2} {cutoff_time} {data_file} >> {file1}')
