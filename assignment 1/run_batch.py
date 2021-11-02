@@ -1,69 +1,86 @@
 import os
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
-import time
+from parse import parse
+import pandas as pd
+import math
+import argparse
 
-seed_1 = 1325
-seed_2 = 31235
+parser = argparse.ArgumentParser()
+parser.add_argument('-1', '--seed1', type=int, default=1325, help='initial seed for the graph generation')
+parser.add_argument('-2', '--seed2', type=int, default=31235, help='initial seed for node verification')
+parser.add_argument('-n', '--nsamples', type=int, default=36, help='number of samples for each pair of parameters')
+parser.add_argument('-e', '--examrange', type=str, default="(5, 25, 1)", help='(min, max, step) for ranging the param exams')
+parser.add_argument('-p', '--probrange', type=str, default="(0, 1, 0.01)", help='(min, max, step) for ranginf the param prob')
+
+args = parser.parse_args()
+
+seed_1 = args.seed1
+seed_2 = args.seed2
+n_samples = args.nsamples
+
+args.probrange = eval(args.probrange)
+args.examrange = eval(args.examrange)
+
+if type(args.probrange) is not tuple or len(args.probrange) != 3:
+    exit(-1)
+
+if type(args.examrange) is not tuple or len(args.examrange) != 3:
+    exit(-1)
+
+prob_lin_args = (args.probrange[0],
+                 args.probrange[1],
+                 math.ceil((args.probrange[1]-args.probrange[0])/args.probrange[2])+1)
+
+exams = np.arange(*args.examrange)
+probs = np.linspace(*prob_lin_args)
+
+cutoff_time = 300 #seconds
+
 data_file = "data.in"
-avg_test = 5
+file1 = "code1_results.txt"
+file2 = "code2_results.txt"
 
+os.system("rm -f {} {}".format(file1, file2))
 
-def run_test(sizes, percentages, cutoff_time):
-    file1 = "code1_results.txt"
-    file2 = "code2_results.txt"
-
-    os.system(f'rm -f code1_results.txt code2_results.txt')
-
-    code1_times = []
-    code2_times = []
-
-    for p in percentages:
-        for s in sizes:
-            code1_time = []
-            code2_time = []
-            for i in range(avg_test):
-                os.system(f'python3 gen.py {s} {p} {seed_1} {data_file}')
+for s in exams:
+    for p in probs:
+        for i_seed_1 in range(math.ceil(math.sqrt(n_samples))):
+            for i_seed_2 in range(math.ceil(math.sqrt(n_samples))):
+                os.system(f'python3 gen.py {s} {p} {seed_1+i_seed_1} {data_file}')
                 os.system(f'echo "______\\nExams: {s} | Percentage: {p}" | tee -a {file1} {file2}')
-                os.system(f'./code1 {seed_2} {cutoff_time} {data_file} >> {file1}')
-                os.system(f'./code2 {seed_2} {cutoff_time} {data_file} >> {file2}')
-
-                code1_result = open(file1).readlines()[-1][:-1]
-                code2_result = open(file2).readlines()[-1][:-1]
-                print("CODE1:", code1_result, "Iter: ", i+1)  # print last line from code1 results
-                print("CODE2:", code2_result, "Iter: ", i+1)  # print last line from code2 results
-
-                code1_time.append(float(code1_result.split(' ')[1]))
-                code2_time.append(float(code2_result.split(' ')[1]))
-
-                if code1_result.split(' ')[0] == '-1' and code2_result.split(' ')[0] == '-1':
-                    break
-
+                os.system(f'./code1 {seed_2+i_seed_2} {cutoff_time} {data_file} >> {file1}')
+                os.system(f'./code2 {seed_2+i_seed_2} {cutoff_time} {data_file} >> {file2}')
+                print("CODE1:", open(file1).readlines()[-1][:-1]) # print last line from code1 results
+                print("CODE2:", open(file2).readlines()[-1][:-1]) # print last line from code2 results
                 if open(file1).readlines()[-1].startswith("Exams") or open(file2).readlines()[-1].startswith("Exams"):
                     # if some of the processes didn't return something then it stops cause it means a sigint was signaled
                     # and stopped the subprocess
                     sys.exit(0)
-            code1_times.append(np.average(code1_time))
-            code2_times.append(np.average(code2_time))
 
-    return code1_times, code2_times
+for i in [1, 2]:
+    code = "code{}".format(i)
 
+    cols = ["Exams", "Percentage", "Solution_"+code, "Time_"+code]
+    csv = "measurements.csv"
+    export_csv_path = "measurements.csv"
 
-if __name__ == '__main__':
-    start_time = time.time()
-    sizes = np.arange(20, 51, 1)
-    # sizes = [20]
-    # percentages = np.linspace(0, 1, 21)
-    percentages = [0.4]
-    cutoff_time = 100  # seconds
+    if csv is None:
+        df = pd.DataFrame(columns=cols)
+    else:
+        df = pd.read_csv(csv, index_col=0)
 
-    code_times1, code_times2 = run_test(sizes, percentages, cutoff_time)
+    with open("{}_results.txt".format(code)) as file:
+        lines = file.readlines()
+        for l in range(len(lines)):
+            if lines[l] == "______\n":
+                try:
+                    l1 = parse("Exams: {} | Percentage: {}", lines[l+1])
+                    l2 = parse("{} {}", lines[l + 2])
+                    df2 = pd.DataFrame([[int(l1[0]), float(l1[1]), int(l2[0]), float(l2[1])]], columns=cols)
+                    df = df.append(df2, ignore_index = True)
+                except:
+                    pass
 
-    x = sizes if len(sizes) > len(percentages) else percentages
-    plt.scatter(x, code_times1, label="code1")
-    plt.scatter(x, code_times2, label="code2")
-    plt.show()
-
-    print("Total program running time: ", time.time()-start_time, " seconds")
-
+    print(df)
+    df.to_csv(export_csv_path)
