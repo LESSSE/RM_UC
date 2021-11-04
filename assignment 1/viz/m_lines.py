@@ -11,7 +11,7 @@ from mpl_toolkits import mplot3d
 df = pd.read_csv("../measurements.csv", index_col=0)
 df.describe()
 
-"""## 3D Scatter"""
+"""## Linear Regression"""
 
 mean_d = df.groupby(["Exams", "Percentage"]).mean().reset_index()
 mean_d
