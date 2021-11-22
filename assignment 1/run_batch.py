@@ -9,11 +9,16 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--seed1', type=int, default=1325, help='initial seed for the graph generation')
 parser.add_argument('-2', '--seed2', type=int, default=31235, help='initial seed for node verification')
+parser.add_argument('-s', '--seed', type=int, default=63, help='global seed')
 parser.add_argument('-n', '--nsamples', type=int, default=36, help='number of samples for each pair of parameters')
 parser.add_argument('-e', '--examrange', type=str, default="(5, 25, 1)", help='(min, max, step) for ranging the param exams')
 parser.add_argument('-p', '--probrange', type=str, default="(0, 1, 0.01)", help='(min, max, step) for ranginf the param prob')
 
 args = parser.parse_args()
+
+
+seed = args.seed
+random.seed(seed)
 
 seed_1 = args.seed1
 seed_2 = args.seed2
@@ -47,10 +52,15 @@ for s in exams:
     for p in probs:
         for i_seed_1 in range(math.ceil(math.sqrt(n_samples))):
             for i_seed_2 in range(math.ceil(math.sqrt(n_samples))):
-                os.system(f'python3 gen.py {s} {p} {seed_1+i_seed_1} {data_file}')
+            	if seed:
+            	     rand = random.randint(1, 100)
+            	else:
+            	     rand = 0     
+            	     
+                os.system(f'python3 gen.py {s} {p} {seed_1+i_seed_1+rand} {data_file}')
                 os.system(f'echo "______\\nExams: {s} | Percentage: {p}" | tee -a {file1} {file2}')
-                os.system(f'./code1 {seed_2+i_seed_2} {cutoff_time} {data_file} >> {file1}')
-                os.system(f'./code2 {seed_2+i_seed_2} {cutoff_time} {data_file} >> {file2}')
+                os.system(f'./code1 {seed_2+i_seed_2+rand} {cutoff_time} {data_file} >> {file1}')
+                os.system(f'./code2 {seed_2+i_seed_2+rand} {cutoff_time} {data_file} >> {file2}')
                 print("CODE1:", open(file1).readlines()[-1][:-1]) # print last line from code1 results
                 print("CODE2:", open(file2).readlines()[-1][:-1]) # print last line from code2 results
                 if open(file1).readlines()[-1].startswith("Exams") or open(file2).readlines()[-1].startswith("Exams"):
