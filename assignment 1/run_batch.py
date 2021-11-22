@@ -5,6 +5,7 @@ from parse import parse
 import pandas as pd
 import math
 import argparse
+import random
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--seed1', type=int, default=1325, help='initial seed for the graph generation')
@@ -43,24 +44,38 @@ probs = np.linspace(*prob_lin_args)
 cutoff_time = 300 #seconds
 
 data_file = "data.in"
+
 file1 = "code1_results.txt"
+file_seeds1 = "code1_seeds.txt"
+
 file2 = "code2_results.txt"
+file_seeds2 = "code2_seeds.txt"
 
 os.system("rm -f {} {}".format(file1, file2))
 
 for s in exams:
     for p in probs:
         for i_seed_1 in range(math.ceil(math.sqrt(n_samples))):
+            if seed:
+                rand_gen = random.randint(1, 100)
+            else:
+                rand_gen = 0
             for i_seed_2 in range(math.ceil(math.sqrt(n_samples))):
-            	if seed:
-            	     rand = random.randint(1, 100)
-            	else:
-            	     rand = 0     
-            	     
-                os.system(f'python3 gen.py {s} {p} {seed_1+i_seed_1+rand} {data_file}')
+                if seed:
+                    rand_code1 = random.randint(1, 100)
+                    rand_code2 = random.randint(1, 100)
+                else:
+                    rand_code1 = 0
+                    rand_code2 = 0
+                os.system(f'python3 gen.py {s} {p} {seed_1+i_seed_1+rand_gen} {data_file}')
                 os.system(f'echo "______\\nExams: {s} | Percentage: {p}" | tee -a {file1} {file2}')
-                os.system(f'./code1 {seed_2+i_seed_2+rand} {cutoff_time} {data_file} >> {file1}')
-                os.system(f'./code2 {seed_2+i_seed_2+rand} {cutoff_time} {data_file} >> {file2}')
+
+                os.system(f'echo "Seed1: {seed_1+i_seed_1+rand_gen} | Seed2: {seed_2+i_seed_2+rand_code1}" >> {file1}')
+                os.system(f'./code1 {seed_2+i_seed_2+rand_code1} {cutoff_time} {data_file} >> {file1}')
+
+                os.system(f'echo "Seed1: {seed_1+i_seed_1+rand_gen} | Seed2: {seed_2+i_seed_2+rand_code2}" >> {file2}')
+                os.system(f'./code2 {seed_2+i_seed_2+rand_code2} {cutoff_time} {data_file} >> {file2}')
+
                 print("CODE1:", open(file1).readlines()[-1][:-1]) # print last line from code1 results
                 print("CODE2:", open(file2).readlines()[-1][:-1]) # print last line from code2 results
                 if open(file1).readlines()[-1].startswith("Exams") or open(file2).readlines()[-1].startswith("Exams"):
@@ -71,7 +86,7 @@ for s in exams:
 for i in [1, 2]:
     code = "code{}".format(i)
 
-    cols = ["Exams", "Percentage", "Solution_"+code, "Time_"+code]
+    cols = ["Exams", "Percentage", "Seed1", "Seed2", "Solution_"+code, "Time_"+code,]
     csv = "measurements.csv"
     export_csv_path = "measurements.csv"
 
@@ -85,10 +100,11 @@ for i in [1, 2]:
         for l in range(len(lines)):
             if lines[l] == "______\n":
                 try:
-                    l1 = parse("Exams: {} | Percentage: {}", lines[l+1])
-                    l2 = parse("{} {}", lines[l + 2])
-                    df2 = pd.DataFrame([[int(l1[0]), float(l1[1]), int(l2[0]), float(l2[1])]], columns=cols)
-                    df = df.append(df2, ignore_index = True)
+                    l1 = parse("Exams: {} | Percentage: {}", lines[l + 1])
+                    l2 = parse("Seed1: {} | Seed2: {}", lines[l + 2])
+                    l3 = parse("{} {}", lines[l + 3])
+                    df2 = pd.DataFrame([[int(l1[0]), float(l1[1]), int(l2[0]), int(l2[1]), int(l3[0]), float(l3[1])]], columns=cols)
+                    df = df.append(df2, ignore_index=True)
                 except:
                     pass
 
