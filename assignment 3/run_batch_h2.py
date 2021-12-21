@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--seed1', type=int, default=1325, help='initial seed for the graph generation')
 parser.add_argument('-2', '--seed2', type=int, default=31235, help='initial seed for node verification')
 parser.add_argument('-s', '--seed', type=int, default=63, help='global seed')
-parser.add_argument('-n', '--nsamples', type=int, default=36, help='number of samples for each pair of parameters')
+parser.add_argument('-n', '--nsamples', type=int, default=1000, help='number of samples for each pair of parameters')
 
 args = parser.parse_args()
 
@@ -65,14 +65,16 @@ for p in probs:
 
             print(f'{c.upper()}:', open(file1).readlines()[-1][:-1]) # print last line from code1 results
 
+
+csv = None
 for i in [1, 2]:
     code = "code{}".format(i)
 
     cols = ["Exams", "Percentage", "Seed1", "Seed2", "Solution_"+code, "Time_"+code,]
-    csv = None
     export_csv_path = "measurements_h2.csv"
 
     if csv is None:
+        csv = "measurements_h2.csv"
         df = pd.DataFrame(columns=cols)
     else:
         df = pd.read_csv(csv, index_col=0)

@@ -60,15 +60,16 @@ for s in exams:
                 
                 print(f'{c.upper()}:', open(file1).readlines()[-1][:-1]) # print last line from code1 results
 
+csv = None
 for i in [1, 2]:
     code = "code{}".format(i)
 
     cols = ["Exams", "Percentage", "Seed1", "Seed2", "Solution_"+code, "Time_"+code,]
-    csv = None
     export_csv_path = "measurements_h1.csv"
 
     if csv is None:
         df = pd.DataFrame(columns=cols)
+        csv = export_csv_path
     else:
         df = pd.read_csv(csv, index_col=0)
 
