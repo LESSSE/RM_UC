@@ -39,7 +39,7 @@ os.system("rm -f {} {}".format(file1, file2))
 
 for p in probs:
     for i in range(n_samples):
-        s = np.random.randint(1, 15)
+        s = np.random.randint(1, 14)
 
         rand_gen = random.randint(1, 100)
 
@@ -56,8 +56,8 @@ for p in probs:
             rand_run = random.randint(1, 100)
 
             os.system(f'python3 gen.py {s} {p} {seed_gen+rand_gen} {data_file}')
-            print(f'______\\nExams: {s} | Percentage: {p}:')  # print last line from code1 results
-            os.system(f'echo "______\\nExams: {s} | Percentage: {p}" >> {file_} ')
+            print(f'______\nExams: {s} | Percentage: {p}:')  # 
+            os.system(f'echo "______\nExams: {s} | Percentage: {p}" >> {file_} ')
 
             os.system(f'echo "Seed1: {seed_gen+rand_gen} | Seed2: {seed_run+rand_run}" >> {file_}')
             os.system(f'./{c.lower()} {seed_run+rand_run} {cutoff_time} {data_file} >> {file_}')

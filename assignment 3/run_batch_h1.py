@@ -53,7 +53,7 @@ for s in exams:
                 rand_run = random.randint(1, 100)
             
                 os.system(f'python3 gen.py {s} {p} {seed_gen+rand_gen} {data_file}')
-                os.system(f'echo "______\\nExams: {s} | Percentage: {p}" >> {file_} ')
+                os.system(f'echo "______\nExams: {s} | Percentage: {p}" >> {file_} ')
 
                 os.system(f'echo "Seed1: {seed_gen+rand_gen} | Seed2: {seed_run+rand_run}" >> {file_}')
                 os.system(f'./{c.lower()} {seed_run+rand_run} {cutoff_time} {data_file} >> {file_}')
@@ -64,7 +64,7 @@ for i in [1, 2]:
     code = "code{}".format(i)
 
     cols = ["Exams", "Percentage", "Seed1", "Seed2", "Solution_"+code, "Time_"+code,]
-    csv = "measurements.csv"
+    csv = None
     export_csv_path = "measurements_h1.csv"
 
     if csv is None:
